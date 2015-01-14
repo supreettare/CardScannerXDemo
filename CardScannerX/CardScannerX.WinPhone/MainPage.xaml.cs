@@ -7,6 +7,7 @@ using System.Windows.Controls;
 using System.Windows.Navigation;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
+using Acr.XamForms.Mobile.Media;
 
 namespace CardScannerX.WinPhone
 {
@@ -18,6 +19,9 @@ namespace CardScannerX.WinPhone
             SupportedOrientations = SupportedPageOrientation.PortraitOrLandscape;
 
             global::Xamarin.Forms.Forms.Init();
+
+            new MediaPicker();
+
             LoadApplication(new CardScannerX.App());
         }
     }

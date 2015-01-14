@@ -4,6 +4,7 @@ using System.Linq;
 
 using Foundation;
 using UIKit;
+using Acr.XamForms.Mobile.Media;
 
 namespace CardScannerX.iOS
 {
@@ -23,6 +24,9 @@ namespace CardScannerX.iOS
         public override bool FinishedLaunching(UIApplication app, NSDictionary options)
         {
             global::Xamarin.Forms.Forms.Init();
+
+            new MediaPicker(); 
+
             LoadApplication(new App());
 
             return base.FinishedLaunching(app, options);
