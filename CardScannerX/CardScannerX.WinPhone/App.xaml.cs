@@ -7,6 +7,8 @@ using System.Windows.Navigation;
 using Microsoft.Phone.Controls;
 using Microsoft.Phone.Shell;
 using CardScannerX.WinPhone.Resources;
+using System.IO.IsolatedStorage;
+using Microsoft.Xna.Framework.Media;
 
 namespace CardScannerX.WinPhone
 {
@@ -55,6 +57,13 @@ namespace CardScannerX.WinPhone
                 PhoneApplicationService.Current.UserIdleDetectionMode = IdleDetectionMode.Disabled;
             }
 
+#if DEBUG
+            if (Microsoft.Devices.Environment.DeviceType == Microsoft.Devices.DeviceType.Emulator)
+            {
+                addTestImageToEmulator();
+            }
+#endif
+
         }
 
         // Code to execute when the application is launching (eg, from Start)
@@ -100,6 +109,33 @@ namespace CardScannerX.WinPhone
                 Debugger.Break();
             }
         }
+
+        private void addTestImageToEmulator()
+        {
+            IsolatedStorageSettings userSettings = IsolatedStorageSettings.ApplicationSettings;
+            if (userSettings.Contains(testImageAddedFlagName))
+            {
+                return;
+            }
+
+            MediaLibrary mediaLibrary = new MediaLibrary();
+            Uri sourceUri = new Uri(testImageSourceFileName, UriKind.Relative);
+
+            var resourceStream = App.GetResourceStream(sourceUri);
+            using (System.IO.Stream photoStream = resourceStream.Stream)
+            {
+                byte[] buffer = new byte[photoStream.Length];
+                photoStream.Read(buffer, 0, buffer.Length);
+                mediaLibrary.SavePicture(testImageOnEmulatorFileName, buffer);
+            }
+
+            userSettings[testImageAddedFlagName] = null;
+            userSettings.Save();
+        }
+
+        private const string testImageAddedFlagName = "__emulatorCloudOcrSdkTestImagesAdded";
+        private const string testImageSourceFileName = "SampleImage.jpg";
+        private const string testImageOnEmulatorFileName = "CloudOcrSdkTestImage.jpg";
 
         #region Phone application initialization
 

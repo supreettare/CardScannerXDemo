@@ -1,4 +1,5 @@
 ﻿using Acr.XamForms.Mobile.Media;
+using Acr.XamForms.Mobile.IO;
 using System;
 using System.Collections.Generic;
 using System.Globalization;
@@ -10,14 +11,95 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xamarin.Forms;
+using PCLStorage;
+using Abbyy.CloudOcrSdk;
 
 namespace CardScannerX
 {
     public partial class CameraPage : ContentPage
     {
+        RestServiceClientAsync abbyyClient;
         public CameraPage()
         {
             InitializeComponent();
+            RestServiceClient syncClient = new RestServiceClient();
+            syncClient.ApplicationId = "YOUR_APP_NAME";
+            syncClient.Password = "YOUR_API_KEY";
+
+            abbyyClient = new RestServiceClientAsync(syncClient);
+
+            abbyyClient.UploadFileCompleted += UploadCompleted;
+            abbyyClient.TaskProcessingCompleted += ProcessingCompleted;
+            abbyyClient.DownloadFileCompleted += DownloadCompleted;
+
+        }
+
+        private void UploadCompleted(object sender, UploadCompletedEventArgs e)
+        {
+            //DisplayAlert("Upload Completed", "Processing", "Okay");
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                displayMessage("Upload completed. Processing..");
+            });
+        }
+
+        private void ProcessingCompleted(object sender, TaskEventArgs e)
+        {
+            if (e.Error != null)
+            {
+                Device.BeginInvokeOnMainThread(() =>
+                {
+                    displayMessage("Processing error: " + e.Error.Message);
+                });
+                
+
+                return;
+            }
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                displayMessage("Processing completed. Downloading..");
+            });
+            
+
+
+            // Download a file
+            string outputPath = "result.txt";
+            Abbyy.CloudOcrSdk.Task task = e.Result;
+            abbyyClient.DownloadFileAsync(task, outputPath, outputPath);
+        }
+
+        private void DownloadCompleted(object sender, TaskEventArgs e)
+        {
+            string message = "";
+            if (e.Error != null)
+            {
+                message = "Error downloading: " + e.Error.Message;
+            }
+            else
+            {
+                message = "Downloaded.\nResult:";
+
+                string txtFilePath = e.UserState as string;
+                var file = DependencyService.Get<ISaveStreamToStorage>().OpenFile(txtFilePath);
+                using (StreamReader reader = new StreamReader(file))
+                {
+                    message += reader.ReadToEnd();
+                }
+            }
+
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                displayMessage(message);
+            });
+
+            
+        }
+
+        private void displayMessage(string text)
+        {
+            statusMsg.Text = text;
         }
 
         public async void OnButtonClicked(object sender, EventArgs e)
@@ -28,7 +110,18 @@ namespace CardScannerX
             {
                 var result = await DependencyService.Get<IMediaPicker>().PickPhoto();
                 this.OnPhotoReceived(result);
-            }   
+            }
+        }
+
+        public async void OnButtonClicked2(object sender, EventArgs e)
+        {
+            //await this.Navigation.PushAsync(new ForgotPassword());
+
+            if (DependencyService.Get<IMediaPicker>().IsCameraAvailable)
+            {
+                var result = await DependencyService.Get<IMediaPicker>().TakePhoto();
+                this.OnPhotoReceived(result);
+            }
         }
 
         private ImageSource photoSource;
@@ -42,7 +135,7 @@ namespace CardScannerX
             }
         }
 
-        int size = 0; 
+        int size = 0;
 
 
         private async void OnPhotoReceived(IMediaFile file)
@@ -56,11 +149,19 @@ namespace CardScannerX
                 else
                 {
                     this.Photo = ImageSource.FromFile(file.Path);
-                    imgCaptured.Source = file.Path;
                     byte[] fileBytes = ReadFully(file.GetStream());
                     size = fileBytes.Length;
 
-                    var response = await Upload(fileBytes, size);
+                    string localPath = "image.jpg";
+                    DependencyService.Get<ISaveStreamToStorage>().SaveImageToFile(file.GetStream(), localPath);
+                    ProcessingSettings settings = new ProcessingSettings();
+                    settings.SetLanguage("English,Russian");
+                    settings.OutputFormat = OutputFormat.txt;
+
+                    displayMessage("Uploading..");
+                    abbyyClient.ProcessImageAsync(localPath, settings, settings);
+
+                   // var response = await Upload(fileBytes, size);
                 }
             }
             catch (Exception ex)
@@ -92,7 +193,7 @@ namespace CardScannerX
                 var client = new HttpClient();
                 var requestContent = new MultipartFormDataContent();
                 //    here you can specify boundary if you need---^
-                
+
                 var imageContent = new ByteArrayContent(image);
                 imageContent.Headers.ContentType =
                     MediaTypeHeaderValue.Parse("image/jpeg");
@@ -112,7 +213,7 @@ namespace CardScannerX
                 var t = ex.Message;
                 return new HttpResponseMessage(System.Net.HttpStatusCode.BadRequest);
             }
-            
+
         }
     }
 }

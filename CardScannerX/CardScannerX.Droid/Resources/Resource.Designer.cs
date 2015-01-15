@@ -28,6 +28,8 @@ namespace CardScannerX.Droid
 		{
 			global::Acr.XamForms.Mobile.Droid.Resource.String.ApplicationName = global::CardScannerX.Droid.Resource.String.ApplicationName;
 			global::Acr.XamForms.Mobile.Droid.Resource.String.Hello = global::CardScannerX.Droid.Resource.String.Hello;
+			global::PCLStorage.Resource.String.ApplicationName = global::CardScannerX.Droid.Resource.String.ApplicationName;
+			global::PCLStorage.Resource.String.Hello = global::CardScannerX.Droid.Resource.String.Hello;
 		}
 		
 		public partial class Attribute

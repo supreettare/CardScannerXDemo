@@ -3,7 +3,10 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="CardScannerX.CameraPage">
   <StackLayout>
-    <Button Text="Get Image" Clicked="OnButtonClicked" HeightRequest="100"/>
-    <Image x:Name="imgCaptured" HeightRequest="300" WidthRequest="300" Source="SplashScreenImage.jpg"/>
+    <Button Text="Choose Image" Clicked="OnButtonClicked" HeightRequest="100"/>
+    <Button Text="Capture Image" Clicked="OnButtonClicked2" HeightRequest="100"/>
+    <ScrollView>
+      <Label x:Name="statusMsg"/>
+    </ScrollView>
   </StackLayout>
 </ContentPage>
