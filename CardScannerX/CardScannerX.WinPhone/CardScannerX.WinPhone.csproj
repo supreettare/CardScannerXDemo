@@ -124,6 +124,7 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="id.png" />
     <Content Include="README_FIRST.txt" />
     <Content Include="SampleImage.jpg" />
     <Content Include="SplashScreenImage.jpg">

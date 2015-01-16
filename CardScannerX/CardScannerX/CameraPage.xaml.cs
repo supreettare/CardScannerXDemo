@@ -22,80 +22,80 @@ namespace CardScannerX
         public CameraPage()
         {
             InitializeComponent();
-            RestServiceClient syncClient = new RestServiceClient();
-            syncClient.ApplicationId = "YOUR_APP_NAME";
-            syncClient.Password = "YOUR_API_KEY";
+            //RestServiceClient syncClient = new RestServiceClient();
+            //syncClient.ApplicationId = "APP_NAME";
+            //syncClient.Password = "API_KEY";
 
-            abbyyClient = new RestServiceClientAsync(syncClient);
+            //abbyyClient = new RestServiceClientAsync(syncClient);
 
-            abbyyClient.UploadFileCompleted += UploadCompleted;
-            abbyyClient.TaskProcessingCompleted += ProcessingCompleted;
-            abbyyClient.DownloadFileCompleted += DownloadCompleted;
+            //abbyyClient.UploadFileCompleted += UploadCompleted;
+            //abbyyClient.TaskProcessingCompleted += ProcessingCompleted;
+            //abbyyClient.DownloadFileCompleted += DownloadCompleted;
 
         }
 
-        private void UploadCompleted(object sender, UploadCompletedEventArgs e)
-        {
-            //DisplayAlert("Upload Completed", "Processing", "Okay");
+        //private void UploadCompleted(object sender, UploadCompletedEventArgs e)
+        //{
+        //    //DisplayAlert("Upload Completed", "Processing", "Okay");
 
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                displayMessage("Upload completed. Processing..");
-            });
-        }
+        //    Device.BeginInvokeOnMainThread(() =>
+        //    {
+        //        displayMessage("Upload completed. Processing..");
+        //    });
+        //}
 
-        private void ProcessingCompleted(object sender, TaskEventArgs e)
-        {
-            if (e.Error != null)
-            {
-                Device.BeginInvokeOnMainThread(() =>
-                {
-                    displayMessage("Processing error: " + e.Error.Message);
-                });
+        //private void ProcessingCompleted(object sender, TaskEventArgs e)
+        //{
+        //    if (e.Error != null)
+        //    {
+        //        Device.BeginInvokeOnMainThread(() =>
+        //        {
+        //            displayMessage("Processing error: " + e.Error.Message);
+        //        });
                 
 
-                return;
-            }
+        //        return;
+        //    }
 
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                displayMessage("Processing completed. Downloading..");
-            });
+        //    Device.BeginInvokeOnMainThread(() =>
+        //    {
+        //        displayMessage("Processing completed. Downloading..");
+        //    });
             
 
 
-            // Download a file
-            string outputPath = "result.txt";
-            Abbyy.CloudOcrSdk.Task task = e.Result;
-            abbyyClient.DownloadFileAsync(task, outputPath, outputPath);
-        }
+        //    // Download a file
+        //    string outputPath = "result.txt";
+        //    Abbyy.CloudOcrSdk.Task task = e.Result;
+        //    abbyyClient.DownloadFileAsync(task, outputPath, outputPath);
+        //}
 
-        private void DownloadCompleted(object sender, TaskEventArgs e)
-        {
-            string message = "";
-            if (e.Error != null)
-            {
-                message = "Error downloading: " + e.Error.Message;
-            }
-            else
-            {
-                message = "Downloaded.\nResult:";
+        //private void DownloadCompleted(object sender, TaskEventArgs e)
+        //{
+        //    string message = "";
+        //    if (e.Error != null)
+        //    {
+        //        message = "Error downloading: " + e.Error.Message;
+        //    }
+        //    else
+        //    {
+        //        message = "Downloaded.\nResult:";
 
-                string txtFilePath = e.UserState as string;
-                var file = DependencyService.Get<ISaveStreamToStorage>().OpenFile(txtFilePath);
-                using (StreamReader reader = new StreamReader(file))
-                {
-                    message += reader.ReadToEnd();
-                }
-            }
+        //        string txtFilePath = e.UserState as string;
+        //        var file = DependencyService.Get<ISaveStreamToStorage>().OpenFile(txtFilePath);
+        //        using (StreamReader reader = new StreamReader(file))
+        //        {
+        //            message += reader.ReadToEnd();
+        //        }
+        //    }
 
-            Device.BeginInvokeOnMainThread(() =>
-            {
-                displayMessage(message);
-            });
+        //    Device.BeginInvokeOnMainThread(() =>
+        //    {
+        //        displayMessage(message);
+        //    });
 
             
-        }
+        //}
 
         private void displayMessage(string text)
         {
@@ -152,16 +152,18 @@ namespace CardScannerX
                     byte[] fileBytes = ReadFully(file.GetStream());
                     size = fileBytes.Length;
 
-                    string localPath = "image.jpg";
-                    DependencyService.Get<ISaveStreamToStorage>().SaveImageToFile(file.GetStream(), localPath);
-                    ProcessingSettings settings = new ProcessingSettings();
-                    settings.SetLanguage("English,Russian");
-                    settings.OutputFormat = OutputFormat.txt;
+                    //string localPath = "image.jpg";
+                    //DependencyService.Get<ISaveStreamToStorage>().SaveImageToFile(file.GetStream(), localPath);
+                    //ProcessingSettings settings = new ProcessingSettings();
+                    //settings.SetLanguage("English,Russian");
+                    //settings.OutputFormat = OutputFormat.xml;
+                    
 
-                    displayMessage("Uploading..");
-                    abbyyClient.ProcessImageAsync(localPath, settings, settings);
 
-                   // var response = await Upload(fileBytes, size);
+                    //displayMessage("Uploading..");
+                    //abbyyClient.ProcessImageAsync(localPath, settings, settings);
+
+                    var response = await Upload(fileBytes, size);
                 }
             }
             catch (Exception ex)
@@ -196,16 +198,27 @@ namespace CardScannerX
 
                 var imageContent = new ByteArrayContent(image);
                 imageContent.Headers.ContentType =
-                    MediaTypeHeaderValue.Parse("image/jpeg");
+                    MediaTypeHeaderValue.Parse("image/jpg");
                 //client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data,boundary=-------------------------acebdf13572468"));
-                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/x-vcard"));
+                //client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/x-vcard"));
 
 
 
                 requestContent.Add(imageContent, "image", "image.jpg");
-                string url = "http://bcr1.intsig.net/BCRService/BCR_VCF2?PIN=&user=supreet.tare@taritas.com&pass=6RPY9KPCCFGM54F9&lang=1&size=" + size;
 
-                return await client.PostAsync(url, requestContent);
+                string abbyyUrl = "https://cloud.ocrsdk.com/processBusinessCard";
+                string toEncode = "MY_APP_NAME" + ":" + "MY_API_KEY";
+                Encoding isoEncoding = Encoding.GetEncoding("iso-8859-1");
+                var isoEncoded = isoEncoding.GetBytes(toEncode);
+                String baseEncoded = Convert.ToBase64String(isoEncoded);
+
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", baseEncoded);
+
+
+
+                //string url = "http://bcr1.intsig.net/BCRService/BCR_VCF2?PIN=&user=supreet.tare@taritas.com&pass=6RPY9KPCCFGM54F9&lang=1&size=" + size;
+
+                return await client.PostAsync(abbyyUrl, requestContent);
 
             }
             catch (Exception ex)

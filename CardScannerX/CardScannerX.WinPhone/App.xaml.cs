@@ -134,7 +134,7 @@ namespace CardScannerX.WinPhone
         }
 
         private const string testImageAddedFlagName = "__emulatorCloudOcrSdkTestImagesAdded";
-        private const string testImageSourceFileName = "SampleImage.jpg";
+        private const string testImageSourceFileName = "id.png";
         private const string testImageOnEmulatorFileName = "CloudOcrSdkTestImage.jpg";
 
         #region Phone application initialization
