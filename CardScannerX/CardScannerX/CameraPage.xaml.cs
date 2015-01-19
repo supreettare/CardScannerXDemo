@@ -12,19 +12,21 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Xamarin.Forms;
 using PCLStorage;
-using Abbyy.CloudOcrSdk;
+//using Abbyy.CloudOcrSdk;
 
 namespace CardScannerX
 {
     public partial class CameraPage : ContentPage
     {
-        RestServiceClientAsync abbyyClient;
+        //RestServiceClientAsync abbyyClient;
+        string ext;
+
         public CameraPage()
         {
             InitializeComponent();
             //RestServiceClient syncClient = new RestServiceClient();
-            //syncClient.ApplicationId = "APP_NAME";
-            //syncClient.Password = "API_KEY";
+            //syncClient.ApplicationId = "NetAssetCardScanner";
+            //syncClient.Password = "iDr0VFKwanQFGG0GQDjlnfUx"; 
 
             //abbyyClient = new RestServiceClientAsync(syncClient);
 
@@ -52,7 +54,7 @@ namespace CardScannerX
         //        {
         //            displayMessage("Processing error: " + e.Error.Message);
         //        });
-                
+
 
         //        return;
         //    }
@@ -61,7 +63,7 @@ namespace CardScannerX
         //    {
         //        displayMessage("Processing completed. Downloading..");
         //    });
-            
+
 
 
         //    // Download a file
@@ -94,7 +96,7 @@ namespace CardScannerX
         //        displayMessage(message);
         //    });
 
-            
+
         //}
 
         private void displayMessage(string text)
@@ -152,16 +154,18 @@ namespace CardScannerX
                     byte[] fileBytes = ReadFully(file.GetStream());
                     size = fileBytes.Length;
 
+                 
                     //string localPath = "image.jpg";
                     //DependencyService.Get<ISaveStreamToStorage>().SaveImageToFile(file.GetStream(), localPath);
-                    //ProcessingSettings settings = new ProcessingSettings();
-                    //settings.SetLanguage("English,Russian");
-                    //settings.OutputFormat = OutputFormat.xml;
-                    
+                    //BusCardProcessingSettings settings = new BusCardProcessingSettings();
+                    //settings.Language = "English";
+                    //settings.OutputFormat = BusCardProcessingSettings.OutputFormatEnum.vCard;
+                    //ext = ".vcf";
+
 
 
                     //displayMessage("Uploading..");
-                    //abbyyClient.ProcessImageAsync(localPath, settings, settings);
+                    //abbyyClient.ProcessBusinessCardAsync(localPath, settings, settings);
 
                     var response = await Upload(fileBytes, size);
                 }
@@ -196,29 +200,53 @@ namespace CardScannerX
                 var requestContent = new MultipartFormDataContent();
                 //    here you can specify boundary if you need---^
 
-                var imageContent = new ByteArrayContent(image);
-                imageContent.Headers.ContentType =
-                    MediaTypeHeaderValue.Parse("image/jpg");
-                //client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data,boundary=-------------------------acebdf13572468"));
+                //client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
+
+                //var imageContent = new ByteArrayContent(image);
+                //var imageContent = new StreamContent(image);
+
+                //imageContent.Headers.ContentType =
+                //    MediaTypeHeaderValue.Parse("image/jpeg");
+
+
+                client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("multipart/form-data"));
                 //client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("text/x-vcard"));
 
 
 
-                requestContent.Add(imageContent, "image", "image.jpg");
+                //requestContent.Add(imageContent, "image", "image.jpg");
 
-                string abbyyUrl = "https://cloud.ocrsdk.com/processBusinessCard";
-                string toEncode = "MY_APP_NAME" + ":" + "MY_API_KEY";
+
+
+                //client.BaseAddress = new Uri("http://cloud.ocrsdk.com/processBusinessCard");
+                MultipartFormDataContent form = new MultipartFormDataContent();
+                HttpContent content = new StringContent("fileToUpload");
+                form.Add(content, "fileToUpload");
+                //var stream = await file.OpenStreamForReadAsync();
+                content = new StreamContent(new MemoryStream(image));
+                content.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data")
+                {
+                    Name = "fileToUpload",
+                    FileName = "image.jpg"
+                };
+
+                content.Headers.ContentType = MediaTypeHeaderValue.Parse("image/jpeg");
+                form.Add(content);
+
+                //requestContent.Add(new StreamContent(new MemoryStream(image)));
+
+
+                string abbyyUrl = "http://cloud.ocrsdk.com/processBusinessCard";
+                string toEncode = "NetAssetCardScanner" + ":" + "iDr0VFKwanQFGG0GQDjlnfUx";
                 Encoding isoEncoding = Encoding.GetEncoding("iso-8859-1");
                 var isoEncoded = isoEncoding.GetBytes(toEncode);
                 String baseEncoded = Convert.ToBase64String(isoEncoded);
-
                 client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Basic", baseEncoded);
-
 
 
                 //string url = "http://bcr1.intsig.net/BCRService/BCR_VCF2?PIN=&user=supreet.tare@taritas.com&pass=6RPY9KPCCFGM54F9&lang=1&size=" + size;
 
-                return await client.PostAsync(abbyyUrl, requestContent);
+                return await client.PostAsync(abbyyUrl, form);
 
             }
             catch (Exception ex)
